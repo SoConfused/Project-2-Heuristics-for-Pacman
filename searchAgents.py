@@ -343,7 +343,7 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
-            # state = [current state information], allocate/path, cost int containing stateful cost path
+            # state = (currentLocation, list of visited corners)
             x,y = state[0]
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
