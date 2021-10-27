@@ -34,6 +34,7 @@ description for details.
 Good luck and happy searching!
 """
 
+from sys import _current_frames
 from game import Directions
 from game import Agent
 from game import Actions
@@ -304,7 +305,22 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        # State will include a current location and a list of visited corners.
+        currLocation = state[0]
+        currCorners = state[1].copy()
+
+        """
+        if the current location is a corner, and if it's not in 
+        the visited corners, add it to a shallow copy of the
+        currently visited corners list, and if that list is at max
+        capacity (visited 4 corners), return true.
+        """
+        if currLocation is self.corners:
+            if currLocation in currCorners:
+                pass
+            else:
+                currCorners.append(currLocation)
+        return len(currCorners) == 4
 
     def getSuccessors(self, state):
         """
@@ -327,6 +343,26 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
+            # state = [current state information], allocate/path, cost int containing stateful cost path
+            x,y = state[0]
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            hitsWall = self.walls[nextx][nexty]
+            
+            if not hitsWall:
+                # check if a corner state, if so, update soft global winstate manager
+                nextLocation = (nextx, nexty)
+                currCorners = state[1].copy()
+
+                # if the child is a corner, AND not visited yet, add it.
+                if nextLocation in self.corners:
+                    if not nextLocation in currCorners:
+                    # update the global state to pop the now visited corner
+                        currCorners.append(nextLocation)
+
+                # new successor
+                successor = ((nextLocation, currCorners), action, 1)
+                successors.append(successor)
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -362,7 +398,33 @@ def cornersHeuristic(state, problem):
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
     "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    currLocation = state[0]
+    currCorners = state[1]
+    unvisited = []
+    cost = []
+    """
+    Create an unvisited list of corners to view.
+    Simpler than using a not currCorners array via comparing the 
+    self.corners to currCorners
+    
+    cost consolidates the shortest path from current state to all unvisited corners,
+    courtesy of given function: mazeDistance()
+    appended 0 to mimic the trivial solution.
+    """
+    for i in corners:
+        if i in currCorners:
+            pass
+        else:
+            unvisited.append(i)
+    """
+    because it's admissible, find the max distance corner first, then upon sequential
+    calls, find the next furthest corner; this should minimizes moves used.
+    """
+
+    cost.append(0)
+    for corner in unvisited:
+        cost.append(mazeDistance(currLocation, corner, problem.startingGameState))
+    return max(cost)
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
